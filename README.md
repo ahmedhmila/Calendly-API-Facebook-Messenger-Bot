@@ -34,7 +34,7 @@ The Calendly-API-Facebook-Messenger-Bot is a Python script that leverages the Ca
 
 1. Clone the repository to your local machine:
    ```
-   git clone https://github.com/yourusername/facebook-messenger-auto-bot.git
+   git clone https://github.com/ahmedhmila/Calendly-API-Facebook-Messenger-Bot.git
    ```
 
 2. Install the required Python libraries using pip:
@@ -48,7 +48,7 @@ The Calendly-API-Facebook-Messenger-Bot is a Python script that leverages the Ca
 
 1. Run the script:
    ```
-   python auto_bot.py
+   python Calendly-API-Facebook-Messenger-Bot.py
    ```
 
 2. Log in to your Facebook account when prompted by the script.
