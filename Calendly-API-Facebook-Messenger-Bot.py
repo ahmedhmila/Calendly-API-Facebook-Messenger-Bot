@@ -1,73 +1,61 @@
 import requests
 import time
-from datetime import datetime, timedelta
 import json
-
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 
+# Configuration Constants
+CALENDLY_API_URL = "https://api.calendly.com/scheduled_events"
+ORG_UUID = "YOUR-ORG-UUID"
+FACEBOOK_GROUP_CHAT_URL = "https://www.facebook.com/messages/t/Your-messenger-group-id"
+EMAIL = "your-email"
+PASSWORD = "your-password"
+EDGE_DRIVER_PATH = "your-msedge-driver-path\\msedgedriver.exe"
+EDGE_BINARY_LOCATION = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 
-url = "https://api.calendly.com/scheduled_events"
-headers = {
-    "Content-Type": "application/json",
-    "Authorization": "Bearer YOUR-AUTH-TOKEN",
-}
-
-
-group_chat_url = "https://www.facebook.com/messages/t/Your-meessenger-group-id"
-
-email = "your-email"
-password = "your-password"
-edge_driver_path = "your-msedge-driver-path\\msedgedriver.exe"
-service = Service(executable_path=edge_driver_path)
-
-
+# Initialize Edge WebDriver
+service = Service(executable_path=EDGE_DRIVER_PATH)
 edge_options = webdriver.EdgeOptions()
-edge_options.binary_location = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+edge_options.binary_location = EDGE_BINARY_LOCATION
 edge_options.use_chromium = True
 edge_options.add_argument("disable-infobars")
-
-# Create the Edge WebDriver instance
 driver = webdriver.Edge(service=service, options=edge_options)
 
-
+# Login to Facebook
 driver.get("https://www.facebook.com")
 email_input = driver.find_element(By.ID, "email")
 password_input = driver.find_element(By.ID, "pass")
-email_input.send_keys(email)
-password_input.send_keys(password)
+email_input.send_keys(EMAIL)
+password_input.send_keys(PASSWORD)
 password_input.send_keys(Keys.ENTER)
-
-# Wait login
 time.sleep(6)
 
-driver.get(group_chat_url)
-
-
-# start time to the current date and time
+# Define time intervals for Calendly event fetching
 current_time = datetime.now()
 start_time = current_time
-
-# max start time to 21:59
 end_time = current_time.replace(hour=21, minute=59, second=0, microsecond=0)
-
 interval = timedelta(hours=4)
 
+# Loop to fetch Calendly events
 while start_time <= end_time:
     formatted_start_time = start_time.strftime("%Y-%m-%dT%H:%M")
 
+    # Fetch Calendly events
     response = requests.get(
-        url,
-        headers=headers,
+        CALENDLY_API_URL,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer YOUR-AUTH-TOKEN",
+        },
         params={
-            "organization": "https://api.calendly.com/organizations/YOUR-ORG-UUID",
+            "organization": f"https://api.calendly.com/organizations/{ORG_UUID}",
             "min_start_time": formatted_start_time,
             "max_start_time": end_time.strftime("%Y-%m-%dT%H:%M"),
         },
     )
-
     data = json.loads(response.text)
 
     uris_and_start_times = [
@@ -76,24 +64,19 @@ while start_time <= end_time:
 
     for uri, start_time_str in uris_and_start_times:
         event_start_time = datetime.fromisoformat(start_time_str)
-
         adjusted_start_time = event_start_time + timedelta(hours=1)
-
-        print(f"Event URI: {uri}")
-        print(f"Interview Time: {adjusted_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-
         invitees_url = f"{uri}/invitees"
-
         invitees_response = requests.get(invitees_url, headers=headers)
-
         invitees_data = json.loads(invitees_response.text)
 
+        # Print and send Facebook messages
         for invitee in invitees_data["collection"]:
             invitee_name = invitee.get("name", "No Name Provided")
             invitee_email = invitee.get("email", "No Email Provided")
+            print(f"Event URI: {uri}")
+            print(f"Interview Time: {adjusted_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"Invitee Name: {invitee_name}")
             print(f"Invitee Email: {invitee_email}")
-
             time.sleep(10)
 
             element = driver.find_element(By.XPATH, '//p[@class="xat24cr xdj266r"]')
@@ -107,7 +90,6 @@ while start_time <= end_time:
                 "Invitee Name: ",
                 invitee_name,
             )
-
             element.send_keys(Keys.ENTER)
 
     start_time += interval
@@ -115,5 +97,5 @@ while start_time <= end_time:
     # Wait for 4 hours before the next request
     time.sleep(4 * 60 * 60)
 
-# The driver will be quit after the last iterationo
+# Quit the driver after the last iteration
 driver.quit()
