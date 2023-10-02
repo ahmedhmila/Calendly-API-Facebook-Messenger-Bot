@@ -12,3 +12,8 @@ These enhancements are expected to improve the script's stability and efficiency
 - Used descriptive variable names for self-explanatory code.
 - Kept configuration values at the script's start for easy modification.
 
+## **Update 1.012** ##
+
+- Added a message to be displayed if there are no interviews found.
+
+
